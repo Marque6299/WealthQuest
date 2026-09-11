@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wealth Quest: Sovereign Economy</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/UI.css">
+    <link rel="stylesheet" href="css/markets.css">
+    <link rel="stylesheet" href="css/animation.css">
+</head>
+<body>
+    <div id="app">
+        <!-- TOP HUD: REAL-TIME MACRO & PERSONAL METRICS -->
+        <header id="hud" role="banner">
+            <div class="hud-group">
+                <div class="stat-box">
+                    <span class="stat-label">Date</span>
+                    <span class="stat-value" id="hud-date">Month 1, Year 1</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Liquid Cash</span>
+                    <span class="stat-value highlight-green">$<span id="hud-cash">5,000</span></span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Net Worth</span>
+                    <span class="stat-value">$<span id="hud-networth">5,000</span></span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Credit Score</span>
+                    <span class="stat-value" id="hud-credit-score">700</span>
+                </div>
+            </div>
+
+            <div class="hud-group">
+                <div class="stat-box">
+                    <span class="stat-label">Inflation (CPI)</span>
+                    <span class="stat-value" id="hud-inflation">2.5%</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Central Bank Rate</span>
+                    <span class="stat-value" id="hud-interest-rate">5.0%</span>
+                </div>
+                <button id="btn-next-turn" class="btn-primary pulse-btn" aria-label="End Turn / Advance Month">
+                    Advance Month &#x2794;
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN SHELL NAVIGATION & CONTENT PANELS -->
+        <main id="main-content">
+            <nav id="navbar" role="navigation">
+                <button class="nav-btn active" data-tab="personal">Personal Finance</button>
+                <button class="nav-btn" data-tab="markets">Asset Markets</button>
+                <button class="nav-btn" data-tab="business">Business & Enterprise</button>
+                <button class="nav-btn" data-tab="trade">Global Trade & FX</button>
+                <button class="nav-btn" data-tab="ledger">Financial Ledger</button>
+            </nav>
+
+            <section id="viewport">
+                <!-- 1. PERSONAL FINANCE PANEL -->
+                <div id="tab-personal" class="tab-panel active">
+                    <header class="panel-header">
+                        <h2>Microeconomic Dashboard: Personal Cash Flow</h2>
+                        <span class="subtitle">Manage income, debt servicing, living expenses, and emergency savings.</span>
+                    </header>
+
+                    <div class="dashboard-grid">
+                        <!-- Income & Expense Breakdown -->
+                        <div class="card">
+                            <h3>Monthly Cash Flow Statement</h3>
+                            <ul class="ledger-list">
+                                <li>
+                                    <span>Base Employment Salary</span>
+                                    <span class="amount positive">+$<span id="val-salary">3,500</span></span>
+                                </li>
+                                <li>
+                                    <span>Investment Dividends & Yield</span>
+                                    <span class="amount positive">+$<span id="val-dividends">0</span></span>
+                                </li>
+                                <li>
+                                    <span>Business Profits Net</span>
+                                    <span class="amount positive">+$<span id="val-biz-profit">0</span></span>
+                                </li>
+                                <hr class="divider">
+                                <li>
+                                    <span>Living Expenses & Rent</span>
+                                    <span class="amount negative">-$<span id="val-expenses">1,800</span></span>
+                                </li>
+                                <li>
+                                    <span>Debt Repayment Obligations</span>
+                                    <span class="amount negative">-$<span id="val-debt-service">0</span></span>
+                                </li>
+                                <hr class="divider">
+                                <li class="total-row">
+                                    <span>Net Monthly Cash Flow</span>
+                                    <span class="amount" id="val-net-cashflow">+$1,700</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Debt & Credit Controls -->
+                        <div class="card">
+                            <h3>Liabilities & Credit Management</h3>
+                            <div id="debt-container">
+                                <p class="text-muted">No active high-interest liabilities or mortgages.</p>
+                            </div>
+                            <button id="btn-take-loan" class="btn-secondary">Apply for Credit / Commercial Loan</button>
+                        </div>
+
+                        <!-- Emergency Fund & Liquidity Reserves -->
+                        <div class="card">
+                            <h3>High-Yield Savings & Reserves</h3>
+                            <p>Current HYSA Savings Rate: <span id="hysa-rate">4.2%</span> APY</p>
+                            <p>Reserve Balance: <strong>$<span id="val-hysa-balance">0</span></strong></p>
+                            <div class="button-group">
+                                <button id="btn-deposit-hysa" class="btn-secondary">Deposit</button>
+                                <button id="btn-withdraw-hysa" class="btn-secondary">Withdraw</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. ASSET MARKETS PANEL -->
+                <div id="tab-markets" class="tab-panel">
+                    <header class="panel-header">
+                        <h2>Capital Markets & Asset Exchange</h2>
+                        <span class="subtitle">Invest in equities, bonds, real estate, and ETF assets.</span>
+                    </header>
+
+                    <div class="market-layout">
+                        <!-- Chart & Order Section -->
+                        <div class="market-main card">
+                            <div class="market-header">
+                                <h3 id="selected-asset-title">Global Equity Index (S&P Equivalent)</h3>
+                                <div class="asset-price-info">
+                                    <span id="selected-asset-price">$150.00</span>
+                                    <span id="selected-asset-change" class="positive">+1.2%</span>
+                                </div>
+                            </div>
+                            <!-- Canvas Chart Renderer -->
+                            <div class="chart-container">
+                                <canvas id="marketChart" width="700" height="280"></canvas>
+                            </div>
+                            <div class="trade-controls">
+                                <input type="number" id="trade-quantity" min="1" value="1" placeholder="Quantity">
+                                <button id="btn-buy-asset" class="btn-action buy">Buy Asset</button>
+                                <button id="btn-sell-asset" class="btn-action sell">Sell Asset</button>
+                            </div>
+                        </div>
+
+                        <!-- Ticker Asset Selection List -->
+                        <div class="market-sidebar card">
+                            <h3>Market Tickers</h3>
+                            <div id="ticker-list" class="ticker-list">
+                                <!-- Dynamic Tickers Rendered via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. BUSINESS & ENTERPRISE PANEL -->
+                <div id="tab-business" class="tab-panel">
+                    <header class="panel-header">
+                        <h2>Entrepreneurship & Capital Management</h2>
+                        <span class="subtitle">Incubate startups, optimize OpEx/CapEx, and scale enterprises.</span>
+                    </header>
+
+                    <div class="business-container">
+                        <div id="business-incubation" class="card">
+                            <h3>Ventures Incubator</h3>
+                            <p>Launch a new enterprise to build monthly passive cash flows.</p>
+                            <div class="business-options-grid" id="biz-options">
+                                <!-- Startup cards injected via JavaScript -->
+                            </div>
+                        </div>
+
+                        <div id="active-businesses" class="card">
+                            <h3>Active Commercial Portfolio</h3>
+                            <div id="active-biz-list">
+                                <p class="text-muted">You currently do not own or manage any operating enterprises.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. GLOBAL TRADE & FX PANEL -->
+                <div id="tab-trade" class="tab-panel">
+                    <header class="panel-header">
+                        <h2>Macro Trade & Foreign Exchange (FX) Terminal</h2>
+                        <span class="subtitle">Import raw materials, navigate international tariffs, and trade foreign currencies.</span>
+                    </header>
+
+                    <div class="trade-grid">
+                        <div class="card">
+                            <h3>Foreign Currency Arbitrage (FX)</h3>
+                            <div id="fx-pair-list">
+                                <!-- FX Pairs Injected Dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>Import/Export Commodity Supply Chain</h3>
+                            <div id="commodity-trade-list">
+                                <!-- Commodities Injected Dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. FINANCIAL LEDGER PANEL -->
+                <div id="tab-ledger" class="tab-panel">
+                    <header class="panel-header">
+                        <h2>Complete Historical Ledger & Balance Sheet</h2>
+                        <span class="subtitle">Review historical transactions, economic decisions, and asset valuations.</span>
+                    </header>
+
+                    <div class="card">
+                        <table class="ledger-table">
+                            <thead>
+                                <tr>
+                                    <th>Turn / Month</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Financial Impact</th>
+                                    <th>Ending Cash Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledger-history-rows">
+                                <!-- Transaction log dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- GLOBAL MODAL OVERLAY FOR RANDOM MACRO EVENTS & DIALOGUES -->
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <div class="modal-card">
+                <header class="modal-header">
+                    <h3 id="modal-title">Macroeconomic Event Triggered</h3>
+                </header>
+                <div class="modal-body" id="modal-body">
+                    <!-- Event details and economic contextual commentary -->
+                </div>
+                <footer class="modal-actions" id="modal-actions">
+                    <button class="btn-primary" id="modal-close-btn">Acknowledge</button>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ENGINE SCRIPT LOADING -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

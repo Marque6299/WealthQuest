@@ -1,0 +1,220 @@
+/* ==========================================================================
+   1. DEBT & CREDIT COMPONENTS
+   ========================================================================== */
+.debt-item {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-red);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.debt-info h4 {
+  font-size: 0.95rem;
+  color: var(--text-main);
+  margin-bottom: 0.2rem;
+}
+
+.debt-info p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.debt-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.debt-balance {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent-red);
+}
+
+/* ==========================================================================
+   2. BUSINESS & ENTERPRISE CARDS
+   ========================================================================== */
+.business-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.business-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.biz-option-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.biz-option-card:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+}
+
+.biz-option-card h4 {
+  font-size: 1.1rem;
+  color: var(--accent-blue);
+  margin-bottom: 0.5rem;
+}
+
+.biz-option-card .biz-stats {
+  list-style: none;
+  margin: 0.75rem 0 1.25rem 0;
+  font-size: 0.85rem;
+}
+
+.biz-option-card .biz-stats li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  color: var(--text-muted);
+}
+
+.biz-option-card .biz-stats span {
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.active-biz-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-green);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ==========================================================================
+   3. GLOBAL TRADE & COMMODITY TERMINAL
+   ========================================================================== */
+.trade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.trade-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+}
+
+.trade-pair-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.trade-pair-info .symbol {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.trade-pair-info .details {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.trade-row-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ==========================================================================
+   4. INTERACTIVE FORM INPUTS & CONTROL ELEMENTS
+   ========================================================================== */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.input-group label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.input-field {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.input-field:focus {
+  border-color: var(--accent-blue);
+}
+
+/* ==========================================================================
+   5. ENHANCED MULTI-CHOICE MODAL LAYOUTS
+   ========================================================================== */
+.modal-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.choice-btn {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.choice-btn:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--bg-card-hover);
+}
+
+.choice-btn .choice-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: block;
+  color: var(--accent-gold);
+  margin-bottom: 0.2rem;
+}
+
+.choice-btn .choice-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

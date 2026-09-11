@@ -1,0 +1,204 @@
+/* ==========================================================================
+   1. CAPITAL MARKETS LAYOUT
+   ========================================================================== */
+.market-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .market-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.market-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.market-header h3 {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  font-size: 1.2rem;
+}
+
+.asset-price-info {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+#selected-asset-price {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+#selected-asset-change {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   2. HTML5 CANVAS CHART CONTAINER
+   ========================================================================== */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+canvas#marketChart {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   3. ORDER ENTRY & TRADE CONTROLS
+   ========================================================================== */
+.trade-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.trade-controls input[type="number"] {
+  flex: 1;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  padding: 0.6rem 0.8rem;
+  outline: none;
+}
+
+.trade-controls input[type="number"]:focus {
+  border-color: var(--accent-blue);
+}
+
+.btn-action {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-action:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-action.buy {
+  background-color: var(--accent-green);
+  color: #000;
+}
+
+.btn-action.sell {
+  background-color: var(--accent-red);
+  color: #fff;
+}
+
+/* ==========================================================================
+   4. ASSET TICKER SIDEBAR LIST
+   ========================================================================== */
+.market-sidebar {
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ticker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.ticker-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.85rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.ticker-item:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-focus);
+}
+
+.ticker-item.active {
+  border-color: var(--accent-blue);
+  background-color: var(--accent-blue-bg);
+}
+
+.ticker-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ticker-symbol {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.ticker-name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ticker-metrics {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font-mono);
+}
+
+.ticker-price {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.ticker-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
