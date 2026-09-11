@@ -1,201 +1,258 @@
 /**
  * WEALTH QUEST: SOVEREIGN ECONOMY
- * Main Application Orchestrator & State Loop
+ * Main Application Orchestrator
+ * 
+ * Initializes global state, attaches core simulation engines, wires up UI handlers,
+ * handles turn progression loops, and renders real-time data updates.
  */
 
 import { Config } from './config.js';
-import { StateManager } from './core/StateManager.js';
-import { TimeEngine } from './core/TimeEngine.js';
-import { EventEngine } from './core/EventEngine.js';
-
-import { PersonalFinance } from './modules/PersonalFinance.js';
-import { BusinessEngine } from './modules/BusinessEngine.js';
-import { MarketEngine } from './modules/MarketEngine.js';
-import { GlobalTrade } from './modules/GlobalTrade.js';
-import { EconomyEngine } from './modules/EconomyEngine.js';
-
-import { RenderEngine } from './ui/RenderEngine.js';
-import { ChartRenderer } from './ui/ChartRenderer.js';
+import { MacroEngine } from './engine/MacroEngine.js';
+import { MarketEngine } from './engine/MarketEngine.js';
+import { BusinessEngine } from './engine/BusinessEngine.js';
+import { UIRenderer } from './ui/UIRenderer.js';
 import { DialogueUI } from './ui/DialogueUI.js';
+import { IconGenerator } from './ui/IconGenerator.js';
 
-class GameApp {
+export class GameApp {
     constructor() {
-        // Initialize State Manager
-        this.stateManager = new StateManager();
-        this.state = this.stateManager.loadState() || Config.INITIAL_STATE;
+        // Deep clone initial state from Config
+        this.state = JSON.parse(JSON.stringify(Config.INITIAL_STATE));
+        
+        // Asset Registry Initialization
+        this.marketAssets = JSON.parse(JSON.stringify(Config.MARKET_ASSETS));
+        this.commodities = JSON.parse(JSON.stringify(Config.GLOBAL_TRADE.COMMODITIES));
+        
+        // Dynamic Net Worth Tracker History
+        this.netWorthHistory = [this.calculateNetWorth()];
 
-        // Initialize Core Engines
-        this.timeEngine = new TimeEngine(this.state);
-        this.eventEngine = new EventEngine(this.state);
-        this.economyEngine = new EconomyEngine(this.state);
-
-        // Initialize Financial & Business Subsystems
-        this.personalFinance = new PersonalFinance(this.state, this.economyEngine);
-        this.businessEngine = new BusinessEngine(this.state, this.economyEngine);
-        this.marketEngine = new MarketEngine(this.state, this.economyEngine);
-        this.globalTrade = new GlobalTrade(this.state, this.economyEngine);
-
-        // Initialize UI Layer
-        this.chartRenderer = new ChartRenderer('marketChart');
-        this.dialogueUI = new DialogueUI();
-        this.renderer = new RenderEngine(this);
+        // Instantiate Engines & UI Controllers
+        this.macroEngine = new MacroEngine(this.state.macro);
+        this.marketEngine = new MarketEngine(this.marketAssets, this.commodities);
+        this.businessEngine = new BusinessEngine(this.state.businesses);
+        
+        this.renderer = new UIRenderer();
+        this.dialogue = new DialogueUI();
 
         this.init();
     }
 
     /**
-     * Boot Sequence: Wire Listeners & Perform Initial Render
+     * Initializes app, binds buttons, and conducts first UI render pass
      */
     init() {
-        this.setupNavigation();
-        this.setupActionListeners();
+        // Generate browser Favicon dynamically
+        IconGenerator.generateFavicon();
 
-        // Initial UI Render Cycle
-        this.renderer.updateHUD();
-        this.renderer.renderAllTabs();
-        this.chartRenderer.renderAssetChart(this.marketEngine.getSelectedAsset());
+        // Bind global turn tick button
+        const nextTurnBtn = document.getElementById('btn-next-turn');
+        if (nextTurnBtn) {
+            nextTurnBtn.addEventListener('click', () => this.advanceTurn());
+        }
 
-        this.logLedger("Game Start", "Initial liquidity and capital reserves deployed.", 0);
+        // Bind HYSA deposit & withdrawal buttons
+        this.bindSavingsActions();
+
+        // Bind market asset action delegation
+        this.bindMarketActions();
+
+        // Execute initial HUD & screen render pass
+        this.updateAndRender();
+
+        this.dialogue.showToast('Welcome to Sovereign Economy. Manage capital, assets, and macro risks.', 'info', 5000);
     }
 
     /**
-     * Tab Navigation Listener Setup
+     * Calculates combined total Net Worth across liquid cash, HYSA, equities, and business equity
+     * 
+     * @returns {number} Total Net Worth
      */
-    setupNavigation() {
-        const navButtons = document.querySelectorAll('.nav-btn');
-        navButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const targetTab = e.target.dataset.tab;
-                
-                navButtons.forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+    calculateNetWorth() {
+        const cash = this.state.personal.cash;
+        const hysa = this.state.personal.hysaBalance;
 
-                e.target.classList.add('active');
-                const activePanel = document.getElementById(`tab-${targetTab}`);
-                if (activePanel) {
-                    activePanel.classList.add('active');
-                }
-
-                // Refresh chart if switching back to markets tab
-                if (targetTab === 'markets') {
-                    this.chartRenderer.renderAssetChart(this.marketEngine.getSelectedAsset());
-                }
-            });
+        // Investment portfolio valuation
+        let portfolioVal = 0;
+        Object.entries(this.state.personal.portfolio).forEach(([symbol, qty]) => {
+            const asset = this.marketAssets.find(a => a.symbol === symbol);
+            if (asset) portfolioVal += qty * asset.price;
         });
+
+        // Enterprise valuations
+        let businessVal = 0;
+        this.state.businesses.forEach(b => {
+            businessVal += (b.valuation || 0);
+        });
+
+        // Outstanding liabilities
+        let totalDebt = 0;
+        this.state.personal.debts.forEach(d => {
+            totalDebt += d.principal;
+        });
+
+        return (cash + hysa + portfolioVal + businessVal) - totalDebt;
     }
 
     /**
-     * UI Action Events (End Turn, HYSA, Asset Trading, Loans)
-     */
-    setupActionListeners() {
-        // Advance Turn Button
-        document.getElementById('btn-next-turn').addEventListener('click', () => {
-            this.advanceTurn();
-        });
-
-        // HYSA Deposit / Withdraw
-        document.getElementById('btn-deposit-hysa').addEventListener('click', () => {
-            this.personalFinance.depositHYSA(500);
-            this.renderer.updateHUD();
-            this.renderer.renderPersonalTab();
-        });
-
-        document.getElementById('btn-withdraw-hysa').addEventListener('click', () => {
-            this.personalFinance.withdrawHYSA(500);
-            this.renderer.updateHUD();
-            this.renderer.renderPersonalTab();
-        });
-
-        // Take Commercial/Personal Loan
-        document.getElementById('btn-take-loan').addEventListener('click', () => {
-            this.dialogueUI.showLoanModal((amount, term) => {
-                this.personalFinance.takeLoan(amount, term);
-                this.renderer.updateHUD();
-                this.renderer.renderPersonalTab();
-            });
-        });
-
-        // Market Trading Controls
-        document.getElementById('btn-buy-asset').addEventListener('click', () => {
-            const qty = parseInt(document.getElementById('trade-quantity').value, 10) || 1;
-            this.marketEngine.buySelectedAsset(qty);
-            this.renderer.updateHUD();
-            this.renderer.renderMarketTab();
-            this.chartRenderer.renderAssetChart(this.marketEngine.getSelectedAsset());
-        });
-
-        document.getElementById('btn-sell-asset').addEventListener('click', () => {
-            const qty = parseInt(document.getElementById('trade-quantity').value, 10) || 1;
-            this.marketEngine.sellSelectedAsset(qty);
-            this.renderer.updateHUD();
-            this.renderer.renderMarketTab();
-            this.chartRenderer.renderAssetChart(this.marketEngine.getSelectedAsset());
-        });
-    }
-
-    /**
-     * Main Monthly Turn Loop
+     * Advances the game state by one month turn tick
      */
     advanceTurn() {
         // 1. Advance Calendar
-        this.timeEngine.tickMonth();
-
-        // 2. Update Macroeconomy (Inflation & Interest Rates)
-        this.economyEngine.tick();
-
-        // 3. Process Personal Financial Cash Flows
-        const netCashflow = this.personalFinance.processMonthlyCashFlow();
-
-        // 4. Tick Capital Markets & FX Rates
-        this.marketEngine.tick();
-        this.globalTrade.tick();
-
-        // 5. Process Active Business Net Revenues
-        const businessProfit = this.businessEngine.tick();
-
-        // 6. Record Historical Ledger Log
-        this.logLedger(
-            `Month ${this.state.time.month}, Year ${this.state.time.year}`,
-            `Net Cashflow: $${netCashflow.toLocaleString()} | Biz Revenue: $${businessProfit.toLocaleString()}`,
-            netCashflow + businessProfit
-        );
-
-        // 7. Random Macroeconomic Events
-        const randomEvent = this.eventEngine.evaluateTrigger();
-        if (randomEvent) {
-            this.dialogueUI.showEventModal(randomEvent, (choiceImpact) => {
-                if (choiceImpact) choiceImpact(this.state);
-                this.renderer.updateHUD();
-                this.renderer.renderAllTabs();
-            });
+        this.state.time.totalTurns++;
+        this.state.time.month++;
+        if (this.state.time.month > 12) {
+            this.state.time.month = 1;
+            this.state.time.year++;
         }
 
-        // 8. Save State & Re-render UI
-        this.stateManager.saveState(this.state);
-        this.renderer.updateHUD();
-        this.renderer.renderAllTabs();
-        this.chartRenderer.renderAssetChart(this.marketEngine.getSelectedAsset());
+        // 2. Simulate Macroeconomic Cycle & Rates Shift
+        this.macroEngine.step(this.state.macro);
+
+        // 3. Step Market Prices with Macro Impact
+        this.marketEngine.step(this.state.macro);
+
+        // 4. Process Monthly Personal Finances (Salary + Yields - Expenses - Debt)
+        const netSalary = this.state.personal.salary - this.state.personal.baseLivingExpenses;
+        this.state.personal.cash += netSalary;
+
+        // HYSA Monthly Interest
+        const hysaInterest = this.state.personal.hysaBalance * (this.state.personal.hysaInterestRate / 12);
+        this.state.personal.hysaBalance += hysaInterest;
+
+        // Asset Dividend Distributions
+        Object.entries(this.state.personal.portfolio).forEach(([symbol, qty]) => {
+            const asset = this.marketAssets.find(a => a.symbol === symbol);
+            if (asset && asset.dividendYield > 0) {
+                const monthlyDiv = (qty * asset.price * (asset.dividendYield / 12));
+                this.state.personal.cash += monthlyDiv;
+            }
+        });
+
+        // 5. Process Business Earnings
+        const businessProfit = this.businessEngine.step(this.state.businesses, this.state.macro);
+        this.state.personal.cash += businessProfit;
+
+        // 6. Record Historical Net Worth & Re-render
+        const currentNetWorth = this.calculateNetWorth();
+        this.netWorthHistory.push(currentNetWorth);
+
+        this.updateAndRender();
+
+        this.dialogue.showToast(`Turn ${this.state.time.totalTurns}: Advanced to Month ${this.state.time.month}, Year ${this.state.time.year}`, 'success', 2500);
     }
 
     /**
-     * Record Historical Ledger Activity
+     * Executes UI sync across HUD and active screens
      */
-    logLedger(category, description, impact) {
-        if (!this.state.ledger) this.state.ledger = [];
-        this.state.ledger.unshift({
-            date: `M${this.state.time.month} Y${this.state.time.year}`,
-            category,
-            description,
-            impact,
-            endingCash: this.state.personal.cash
-        });
+    updateAndRender() {
+        const netWorth = this.calculateNetWorth();
+        this.renderer.renderAll(
+            this.state,
+            this.marketAssets,
+            this.commodities,
+            netWorth,
+            this.netWorthHistory
+        );
+    }
 
-        if (this.state.ledger.length > 50) this.state.ledger.pop();
-        this.renderer.renderLedgerTab();
+    /**
+     * Binds deposit and withdrawal logic for HYSA
+     */
+    bindSavingsActions() {
+        const depositBtn = document.getElementById('btn-hysa-deposit');
+        const withdrawBtn = document.getElementById('btn-hysa-withdraw');
+
+        if (depositBtn) {
+            depositBtn.addEventListener('click', () => {
+                const amount = 500;
+                if (this.state.personal.cash >= amount) {
+                    this.state.personal.cash -= amount;
+                    this.state.personal.hysaBalance += amount;
+                    this.updateAndRender();
+                    this.dialogue.showToast(`Deposited $${amount} into HYSA.`, 'info');
+                } else {
+                    this.dialogue.showToast('Insufficient cash available.', 'error');
+                }
+            });
+        }
+
+        if (withdrawBtn) {
+            withdrawBtn.addEventListener('click', () => {
+                const amount = 500;
+                if (this.state.personal.hysaBalance >= amount) {
+                    this.state.personal.hysaBalance -= amount;
+                    this.state.personal.cash += amount;
+                    this.updateAndRender();
+                    this.dialogue.showToast(`Withdrew $${amount} from HYSA.`, 'info');
+                } else {
+                    this.dialogue.showToast('Insufficient HYSA balance.', 'error');
+                }
+            });
+        }
+    }
+
+    /**
+     * Binds purchase and sale delegation for financial markets
+     */
+    bindMarketActions() {
+        const marketList = document.getElementById('market-asset-list');
+        if (!marketList) return;
+
+        marketList.addEventListener('click', (e) => {
+            const buyBtn = e.target.closest('.wq-btn-buy');
+            const sellBtn = e.target.closest('.wq-btn-sell');
+
+            if (buyBtn) {
+                const symbol = buyBtn.dataset.symbol;
+                this.buyAsset(symbol, 1);
+            } else if (sellBtn) {
+                const symbol = sellBtn.dataset.symbol;
+                this.sellAsset(symbol, 1);
+            }
+        });
+    }
+
+    /**
+     * Executes security purchase
+     */
+    buyAsset(symbol, quantity = 1) {
+        const asset = this.marketAssets.find(a => a.symbol === symbol);
+        if (!asset) return;
+
+        const totalCost = asset.price * quantity;
+        if (this.state.personal.cash >= totalCost) {
+            this.state.personal.cash -= totalCost;
+            this.state.personal.portfolio[symbol] = (this.state.personal.portfolio[symbol] || 0) + quantity;
+            this.updateAndRender();
+            this.dialogue.showToast(`Purchased ${quantity} share(s) of ${symbol} for $${totalCost.toFixed(2)}`, 'success');
+        } else {
+            this.dialogue.showToast(`Insufficient cash to purchase ${symbol}.`, 'error');
+        }
+    }
+
+    /**
+     * Executes security sale
+     */
+    sellAsset(symbol, quantity = 1) {
+        const owned = this.state.personal.portfolio[symbol] || 0;
+        if (owned < quantity) {
+            this.dialogue.showToast(`You do not own enough shares of ${symbol}.`, 'error');
+            return;
+        }
+
+        const asset = this.marketAssets.find(a => a.symbol === symbol);
+        if (!asset) return;
+
+        const proceeds = asset.price * quantity;
+        this.state.personal.portfolio[symbol] -= quantity;
+        this.state.personal.cash += proceeds;
+
+        this.updateAndRender();
+        this.dialogue.showToast(`Sold ${quantity} share(s) of ${symbol} for $${proceeds.toFixed(2)}`, 'info');
     }
 }
 
-// Global App Initialization on DOM Ready
-window.addEventListener('DOMContentLoaded', () => {
+// Instantiate game on DOM loaded
+document.addEventListener('DOMContentLoaded', () => {
     window.gameApp = new GameApp();
 });
